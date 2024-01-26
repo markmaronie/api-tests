@@ -4,7 +4,7 @@
 pytest ini
 
 ### Требования для запуска
-* python>=3.8
+* python>=3.12
 * poetry
 
 ### Установка poetry

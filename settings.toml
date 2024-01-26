@@ -1,8 +1,0 @@
-[default]
-BASE_URL = 'http://dapi.p.ostrovok.ru/'
-
-[dev]
-BASE_URL = 'http://dapi.p.ostrovok.ru/'
-
-[prod]
-BASE_URL = 'http://dapi.p.ostrovok.ru/'
