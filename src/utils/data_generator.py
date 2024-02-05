@@ -8,14 +8,16 @@ class DataGenerator:
     Генерация необходимых рандомных данных
     """
 
-    def generate_order_id(self):
+    @staticmethod
+    def generate_order_id():
         """
         Гененрация рандомного id заказа для букинг формы
         """
 
         return ''.join([random.choice(string.ascii_letters + string.digits) for n in range(10)])
 
-    def generate_uuid(self):
+    @staticmethod
+    def generate_uuid():
         """
         Гененрация рандомного uuid
         """

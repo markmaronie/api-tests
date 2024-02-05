@@ -3,8 +3,8 @@ import json
 import time
 
 from datetime import date, timedelta
-from src.api.api_client import ApiClient
-from src.assertions.assertion_base import Asserts
+
+from requests_base.headers.headers_base import HeadersNormal
 from src.utils.data_generator import DataGenerator
 
 
@@ -13,11 +13,8 @@ class TestBook:
     @pytest.mark.book
     @pytest.mark.regress
     @pytest.mark.testrail(id="C123")
-    def test_normal_book_hotel(self):
+    def test_normal_book_hotel(self, base_client, base_asserts):
         """Тест букинга на API V3 бронирование картой на обычный договор"""
-
-        client = ApiClient()
-        asserts = Asserts()
 
         # шаг 1 хотел пейдж
         url = "http://dapi.p.ostrovok.ru/api/b2b/v3/search/hp"
@@ -40,15 +37,11 @@ class TestBook:
             "currency": "RUB",
             "timeout": 200
         })
-        headers = {
-          'Content-Type': 'application/json',
-          'Authorization': 'Basic NTgyMTpkYWVkYjM1NC1jNjIwLTQxOWYtOGQyNy0zYWMzYmIyNjIyOGM=',
-          'Cookie': 'uid=rBEAC2Uv6sBijABOAwMFAg==; uid=rBEAC2VtybJ19gBVAwMKAg=='
-        }
-        response = client.request(url, headers, payload)
+        headers = HeadersNormal.kindergarten_semitsvetik_b2b()
+        response = base_client.request(url, headers, payload)
 
-        asserts.assert_response_code(response.status_code)
-        asserts.assert_more(60.0, response.elapsed.total_seconds())
+        base_asserts.assert_response_code(response.status_code)
+        base_asserts.assert_more(60.0, response.elapsed.total_seconds())
         # TODO Возможно добавить доп проверки
         try:
             for i in response.json()["data"]["hotels"][0]["rates"]:
@@ -64,7 +57,7 @@ class TestBook:
         # шаг 2 букинг форма
         url = "https://partner.p.ostrovok.ru/api/b2b/v3/hotel/order/booking/form/"
 
-        partner_order_id = DataGenerator().generate_order_id()
+        partner_order_id = DataGenerator.generate_order_id()
 
         payload = json.dumps({
             "partner_order_id": partner_order_id,
@@ -72,24 +65,20 @@ class TestBook:
             "language": "ru",
             "user_ip": "82.29.0.86"
         })
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic NTgyMTpkYWVkYjM1NC1jNjIwLTQxOWYtOGQyNy0zYWMzYmIyNjIyOGM=',
-            'Cookie': 'uid=rBEABl3NKlRFGAAhAwS7Ag==; uid=rBEALmUtbjGwPwAVBK+lAg==; uid=rBEALmWBjGIWhgAVA5q4Ag=='
-        }
-        response = client.request(url, headers, payload)
 
-        asserts.assert_response_code(response.status_code)
-        asserts.assert_more(60.0, response.elapsed.total_seconds())
-        asserts.assert_equal(response.json()["status"], "ok")
+        response = base_client.request(url, headers, payload)
+
+        base_asserts.assert_response_code(response.status_code)
+        base_asserts.assert_more(60.0, response.elapsed.total_seconds())
+        base_asserts.assert_equal(response.json()["status"], "ok")
         object_id = str(response.json()["data"]["item_id"])
         amount = response.json()["data"]["payment_types"][0]["amount"]
 
         # шаг 3 оплата
         url = "https://payota.p.ostrovok.ru/api/public/v1/manage/init_partners"
 
-        pay_uuid = DataGenerator().generate_uuid()
-        init_uuid = DataGenerator().generate_uuid()
+        pay_uuid = DataGenerator.generate_uuid()
+        init_uuid = DataGenerator.generate_uuid()
 
         payload = json.dumps({
             "object_id": object_id,
@@ -106,15 +95,12 @@ class TestBook:
             },
             "user_first_name": "Name"
         })
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic NTgyMTpkYWVkYjM1NC1jNjIwLTQxOWYtOGQyNy0zYWMzYmIyNjIyOGM='
-        }
-        response = client.request(url, headers, payload)
 
-        asserts.assert_response_code(response.status_code)
-        asserts.assert_more(60.0, response.elapsed.total_seconds())
-        asserts.assert_equal(response.json()["status"], "ok")
+        response = base_client.request(url, headers, payload)
+
+        base_asserts.assert_response_code(response.status_code)
+        base_asserts.assert_more(60.0, response.elapsed.total_seconds())
+        base_asserts.assert_equal(response.json()["status"], "ok")
 
         # шаг 4 оплата
         url = "https://partner.p.ostrovok.ru/api/b2b/v3/hotel/order/booking/finish/"
@@ -168,16 +154,12 @@ class TestBook:
                 "phone": "+78005556677"
             }
         })
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic NTgyMTpkYWVkYjM1NC1jNjIwLTQxOWYtOGQyNy0zYWMzYmIyNjIyOGM=',
-            'Cookie': 'uid=rBEALmUtbjGwPwAVBK+lAg==; uid=rBEALmWBjGIWhgAVA5q4Ag=='
-        }
-        response = client.request(url, headers, payload)
 
-        asserts.assert_response_code(response.status_code)
-        asserts.assert_more(60.0, response.elapsed.total_seconds())
-        asserts.assert_equal(response.json()["status"], "ok")
+        response = base_client.request(url, headers, payload)
+
+        base_asserts.assert_response_code(response.status_code)
+        base_asserts.assert_more(60.0, response.elapsed.total_seconds())
+        base_asserts.assert_equal(response.json()["status"], "ok")
 
         # Шаг 5 проверить что оплата прошла хорошо
         url = "https://partner.p.ostrovok.ru/api/b2b/v3/hotel/order/booking/finish/status/"
@@ -185,21 +167,17 @@ class TestBook:
         payload = json.dumps({
             "partner_order_id": partner_order_id
         })
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic NTgyMTpkYWVkYjM1NC1jNjIwLTQxOWYtOGQyNy0zYWMzYmIyNjIyOGM=',
-            'Cookie': 'uid=rBEALmUtbjGwPwAVBK+lAg==; uid=rBEALmWBjGIWhgAVA5q4Ag=='
-        }
+
 
 
         t = time.time()
         while time.time() - t < 120:
-            response = client.request(url, headers, payload)
+            response = base_client.request(url, headers, payload)
             print(response.text)
-            asserts.assert_response_code(response.status_code)
-            asserts.assert_more(60.0, response.elapsed.total_seconds())
+            base_asserts.assert_response_code(response.status_code)
+            base_asserts.assert_more(60.0, response.elapsed.total_seconds())
             if response.json()["data"]["percent"] == 100:
-                asserts.assert_equal(response.json()["status"], "ok")
+                base_asserts.assert_equal(response.json()["status"], "ok")
                 break
             time.sleep(10)
         else:
